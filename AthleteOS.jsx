@@ -1,0 +1,1371 @@
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import {
+  Brain, Dumbbell, UtensilsCrossed, Code2, Activity, Play, Pause,
+  SkipForward, RotateCcw, Mic, MicOff, Target, Zap, Trophy, Flame,
+  ChevronRight, Clock, CheckCircle2, Circle, Plus, Volume2, ExternalLink,
+  Salad, ListChecks, GraduationCap, Timer, Crosshair,
+} from "lucide-react";
+
+/* ============================================================================
+   Athlete & Tech Skill OS  —  single-file React component
+   - Safe persistence layer (localStorage with in-memory fallback)
+   - en-IN voice engine + hands-free free-throw loop (Web Speech API)
+   - Continuous workout engine + lock-screen Media Session controls
+   ========================================================================== */
+
+/* ----------------------------- Safe storage ------------------------------- */
+const memStore = {};
+const storage = {
+  get(key, fallback) {
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw == null) return key in memStore ? memStore[key] : fallback;
+      return JSON.parse(raw);
+    } catch {
+      return key in memStore ? memStore[key] : fallback;
+    }
+  },
+  set(key, value) {
+    memStore[key] = value;
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      /* sandbox / private mode: in-memory only */
+    }
+  },
+};
+
+function usePersistentState(key, initial) {
+  const [state, setState] = useState(() => storage.get(key, initial));
+  useEffect(() => {
+    storage.set(key, state);
+  }, [key, state]);
+  return [state, setState];
+}
+
+/* --------------------------- Voice (en-IN) engine ------------------------- */
+function useVoice() {
+  const voiceRef = useRef(null);
+  const supported = typeof window !== "undefined" && "speechSynthesis" in window;
+
+  useEffect(() => {
+    if (!supported) return;
+    const pick = () => {
+      const voices = window.speechSynthesis.getVoices() || [];
+      const byLangExact = voices.find((v) => v.lang === "en-IN");
+      const byLangLoose = voices.find((v) => /en[-_]IN/i.test(v.lang || ""));
+      const byName = voices.find((v) => /india|indian|rishi|veena|heera|kalpana/i.test(v.name || ""));
+      const anyEn = voices.find((v) => (v.lang || "").toLowerCase().startsWith("en"));
+      voiceRef.current = byLangExact || byLangLoose || byName || anyEn || voices[0] || null;
+    };
+    pick();
+    window.speechSynthesis.onvoiceschanged = pick;
+    return () => {
+      try { window.speechSynthesis.onvoiceschanged = null; } catch {}
+    };
+  }, [supported]);
+
+  const speak = useCallback(
+    (text, { interrupt = true, onend } = {}) => {
+      if (!supported) { if (onend) onend(); return; }
+      try {
+        if (interrupt) window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        if (voiceRef.current) u.voice = voiceRef.current;
+        u.lang = (voiceRef.current && voiceRef.current.lang) || "en-IN";
+        u.rate = 0.98;
+        u.pitch = 1.0;
+        if (onend) u.onend = onend;
+        window.speechSynthesis.speak(u);
+      } catch {
+        if (onend) onend();
+      }
+    },
+    [supported]
+  );
+
+  const cancel = useCallback(() => {
+    if (supported) { try { window.speechSynthesis.cancel(); } catch {} }
+  }, [supported]);
+
+  return useMemo(
+    () => ({ speak, cancel, supported, voiceName: () => (voiceRef.current ? voiceRef.current.name : "default") }),
+    [speak, cancel, supported]
+  );
+}
+
+/* ------------------- Silent audio (keeps Media Session alive) ------------- */
+function makeSilentWavUrl() {
+  try {
+    const sampleRate = 8000, seconds = 1, frames = sampleRate * seconds;
+    const buffer = new ArrayBuffer(44 + frames * 2);
+    const view = new DataView(buffer);
+    const w = (off, str) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
+    w(0, "RIFF"); view.setUint32(4, 36 + frames * 2, true); w(8, "WAVE");
+    w(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true); w(36, "data"); view.setUint32(40, frames * 2, true);
+    const blob = new Blob([buffer], { type: "audio/wav" });
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
+
+/* ============================ Domain data ================================= */
+
+const REGIONS = [
+  { id: "design", label: "Design", desc: "HTML, CSS, layout & UI" },
+  { id: "logic", label: "Logic", desc: "JavaScript & problem solving" },
+  { id: "architecture", label: "Architecture", desc: "React, Next.js & systems" },
+];
+
+const CURRICULUM = [
+  // Week 1 — Web Foundations
+  { day: 1, week: 1, region: "design", title: "HTML semantics & structure", task: "Mark up a profile page with semantic tags.", xp: 100, q: "HTML semantic elements crash course" },
+  { day: 2, week: 1, region: "design", title: "CSS box model & specificity", task: "Style a card; debug spacing with box-sizing.", xp: 100, q: "CSS box model explained" },
+  { day: 3, week: 1, region: "design", title: "Flexbox layout mechanics", task: "Build a responsive nav bar with flexbox.", xp: 100, q: "CSS flexbox tutorial" },
+  { day: 4, week: 1, region: "design", title: "CSS Grid layouts", task: "Lay out a dashboard grid, 3 breakpoints.", xp: 100, q: "CSS grid tutorial" },
+  { day: 5, week: 1, region: "design", title: "Tailwind utilities", task: "Rebuild yesterday's grid in Tailwind.", xp: 100, q: "Tailwind CSS crash course" },
+  { day: 6, week: 1, region: "design", title: "Responsive & breakpoints", task: "Mobile-first refactor with sm/md/lg.", xp: 100, q: "responsive web design tutorial" },
+  { day: 7, week: 1, region: "design", title: "Project: landing page", task: "Ship a polished landing page.", xp: 250, q: "Tailwind landing page tutorial" },
+  // Week 2 — JavaScript & Logic
+  { day: 8, week: 2, region: "logic", title: "Variables, types, operators", task: "Solve 5 type-coercion puzzles.", xp: 100, q: "JavaScript basics crash course" },
+  { day: 9, week: 2, region: "logic", title: "Functions & scope", task: "Refactor with pure functions + closures.", xp: 100, q: "JavaScript functions tutorial" },
+  { day: 10, week: 2, region: "logic", title: "Arrays & objects", task: "map / filter / reduce drills.", xp: 100, q: "JavaScript arrays and objects" },
+  { day: 11, week: 2, region: "logic", title: "Loops & conditionals", task: "FizzBuzz + 3 control-flow katas.", xp: 100, q: "JavaScript loops tutorial" },
+  { day: 12, week: 2, region: "logic", title: "DOM & events", task: "Build an interactive to-do in vanilla JS.", xp: 100, q: "JavaScript DOM manipulation" },
+  { day: 13, week: 2, region: "logic", title: "Async, promises, fetch", task: "Fetch an API and render the result.", xp: 100, q: "JavaScript async await fetch tutorial" },
+  { day: 14, week: 2, region: "logic", title: "Project: quiz app", task: "Ship a timed quiz with scoring.", xp: 250, q: "JavaScript project quiz app" },
+  // Week 3 — Next.js, React, Architecture
+  { day: 15, week: 3, region: "architecture", title: "React fundamentals & JSX", task: "Render a list, lift state once.", xp: 100, q: "React JS crash course" },
+  { day: 16, week: 3, region: "architecture", title: "useState & props", task: "Build a counter + controlled input.", xp: 100, q: "React useState hook tutorial" },
+  { day: 17, week: 3, region: "architecture", title: "useEffect & lifecycle", task: "Sync state to an interval cleanly.", xp: 100, q: "React useEffect tutorial" },
+  { day: 18, week: 3, region: "architecture", title: "Component architecture", task: "Split a screen into composable parts.", xp: 100, q: "React component composition" },
+  { day: 19, week: 3, region: "architecture", title: "Custom hooks & context", task: "Extract a usePersistentState hook.", xp: 100, q: "React custom hooks context tutorial" },
+  { day: 20, week: 3, region: "architecture", title: "Next.js routing & data", task: "App-router pages with data fetching.", xp: 100, q: "Next.js app router tutorial" },
+  { day: 21, week: 3, region: "architecture", title: "Project: full-stack app", task: "Ship a Next.js app with an API route.", xp: 250, q: "Next.js full stack project tutorial" },
+  // Week 4 — AI Prompt Engineering & Pair-Programming
+  { day: 22, week: 4, region: "logic", title: "Prompt engineering basics", task: "Write 3 task prompts, compare outputs.", xp: 100, q: "prompt engineering tutorial" },
+  { day: 23, week: 4, region: "logic", title: "System prompts & roles", task: "Design a role + constraints prompt.", xp: 100, q: "system prompt design tutorial" },
+  { day: 24, week: 4, region: "logic", title: "Few-shot & chain-of-thought", task: "Improve accuracy with examples.", xp: 100, q: "chain of thought prompting" },
+  { day: 25, week: 4, region: "logic", title: "Structured outputs (JSON)", task: "Force valid JSON; parse safely.", xp: 100, q: "LLM structured output JSON" },
+  { day: 26, week: 4, region: "architecture", title: "AI pair-programming", task: "Build a feature with an AI partner.", xp: 100, q: "AI pair programming workflow" },
+  { day: 27, week: 4, region: "architecture", title: "Debugging with AI", task: "Triage a bug using AI assistance.", xp: 100, q: "debug code with AI tutorial" },
+  { day: 28, week: 4, region: "architecture", title: "Building with the LLM API", task: "Call an LLM API from your app.", xp: 100, q: "Anthropic Claude API tutorial" },
+  { day: 29, week: 4, region: "architecture", title: "Agentic workflows & tools", task: "Wire a tool-using mini agent.", xp: 100, q: "AI agents tutorial" },
+  { day: 30, week: 4, region: "architecture", title: "Capstone: ship a product", task: "Deploy and share your build.", xp: 250, q: "ship a side project tutorial" },
+];
+
+const WEEK_META = {
+  1: { name: "Web Foundations", note: "HTML, CSS, Tailwind, layout mechanics" },
+  2: { name: "JavaScript & Logic", note: "Types, functions, async, the DOM" },
+  3: { name: "Next.js & Architecture", note: "React hooks & component design" },
+  4: { name: "AI & Pair-Programming", note: "Prompting & building with LLMs" },
+};
+
+/* ----------------------------- ASCII courts ------------------------------- */
+const COURT_PUSH = String.raw`
+            3-POINT  ARC
+     . - '''''''''''''''''''' - .
+   /    o    o    o    o    o     \    5 disc cones
+  /        \  3 steps inside  /    \   tight curved arc
+ /          \   the line     /      \
+|            \              /        |
+|   FT LINE   \ __________ /         |
+|            |            |          |
+|            |   T R A P  |          |   trapezoidal key
+|            | (slanted)  |          |   lanes slant out
+|            /            \          |
+|           /              \         |
+ \_________/_____[ RIM ]____\_______/
+          === B A C K B O A R D ===
+  Drill: 50 mid-range makes, solo spin-toss.
+  Step back to 3 only after 5 clean in a row.`;
+
+const COURT_PULL = String.raw`
+            3-POINT  ARC
+     . - ''''''''''[C4]'''''''' - .   C4 = arc apex
+   /               |               \
+  /               [C3]              \   downhill weave
+ /                 |                 \  C1 -> C2 -> C3 -> C4
+|                 [C2]                | low handle, change
+|   FT LINE _______|_______          | of pace, explode out
+|          |      [C1]     |         |
+|          |     K E Y     |         |  -> layup / floater
+|          /               \         |
+ \________/_____[ RIM ]______\______/
+          === B A C K B O A R D ===
+  4 tall cones stacked down the center line.`;
+
+const COURT_LEGS = String.raw`
+  [ MOVE EXPLOSIVE WORK OFF CONCRETE -> GRASS ]
+
+  CONCRETE COURT          GRASS / SOIL ZONE
+  +-------------+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |  shooting   |     ~ [#][#][#][#]  speed ladder ~
+  |  + handles  | --> ~   H    H    H   hurdles   ~
+  |  (on court) |     ~  ^   depth jumps + bound ^ ~
+  +-------------+     ~  [==== FOAM YOGA MAT ====]  ~
+                     ~   flat-landing stability    ~
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  [#] ladder rung   H hurdle   ^ tall cone   o disc`;
+
+/* ------------------------------- Workouts --------------------------------- */
+function ex(name, sets, reps, restSec = 75, workSec = 40) {
+  return { name, sets, reps, restSec, workSec };
+}
+const SHOOTING = { name: "Mid-Range Form-Lock", note: "Use the Free-Throw Loop panel below" };
+
+const WEEK_PLAN = [
+  {
+    id: "mon", day: "Monday", title: "Push + Range Building",
+    focus: "Upper-body hypertrophy & 5-cone mid-range lock",
+    court: COURT_PUSH, shooting: SHOOTING,
+    exercises: [
+      ex("Bench Press", 4, "8 reps", 90, 45),
+      ex("Incline Dumbbell Press", 4, "10 reps", 75, 45),
+      ex("Overhead Press", 3, "10 reps", 75, 40),
+      ex("Lateral Raise", 3, "15 reps", 60, 35),
+      ex("Triceps Pushdown", 3, "12 reps", 60, 35),
+      ex("Push-up Burnout", 2, "to failure", 60, 40),
+    ],
+  },
+  {
+    id: "tue", day: "Tuesday", title: "Pull + Downhill Handling",
+    focus: "Back mechanics, speed ladder & weave-to-finish",
+    court: COURT_PULL, shooting: null,
+    exercises: [
+      ex("Pull-ups", 4, "8 reps", 90, 40),
+      ex("Barbell Row", 4, "10 reps", 75, 45),
+      ex("Lat Pulldown", 3, "12 reps", 70, 40),
+      ex("Face Pulls", 3, "15 reps", 60, 35),
+      ex("Barbell Curl", 3, "12 reps", 60, 35),
+      ex("Hammer Curl", 3, "12 reps", 60, 35),
+    ],
+  },
+  {
+    id: "wed", day: "Wednesday", title: "Legs + Agility / Plyo",
+    focus: "Strength on court, explosive work on grass",
+    court: COURT_LEGS, shooting: null,
+    exercises: [
+      ex("Back Squat", 4, "8 reps", 120, 50),
+      ex("Romanian Deadlift", 4, "10 reps", 90, 45),
+      ex("Walking Lunge", 3, "12 / leg", 75, 45),
+      ex("Leg Curl", 3, "12 reps", 60, 35),
+      ex("Standing Calf Raise", 4, "15 reps", 45, 35),
+      ex("Depth Jumps (grass)", 3, "6 reps", 90, 30),
+    ],
+  },
+  {
+    id: "thu", day: "Thursday", title: "Push + Range Building",
+    focus: "Upper-body volume & 5-cone mid-range lock",
+    court: COURT_PUSH, shooting: SHOOTING,
+    exercises: [
+      ex("Incline Bench Press", 4, "8 reps", 90, 45),
+      ex("Flat Dumbbell Press", 4, "10 reps", 75, 45),
+      ex("Arnold Press", 3, "10 reps", 75, 40),
+      ex("Cable Lateral Raise", 3, "15 reps", 60, 35),
+      ex("Overhead Triceps Ext.", 3, "12 reps", 60, 35),
+      ex("Dips Burnout", 2, "to failure", 60, 40),
+    ],
+  },
+  {
+    id: "fri", day: "Friday", title: "Legs + Agility / Plyo",
+    focus: "Posterior chain & bounding off concrete",
+    court: COURT_LEGS, shooting: null,
+    exercises: [
+      ex("Front Squat", 4, "8 reps", 120, 50),
+      ex("Hip Thrust", 4, "10 reps", 90, 45),
+      ex("Bulgarian Split Squat", 3, "10 / leg", 75, 45),
+      ex("Leg Extension", 3, "15 reps", 60, 35),
+      ex("Seated Calf Raise", 4, "15 reps", 45, 35),
+      ex("Bounding (grass)", 3, "20 m", 90, 30),
+    ],
+  },
+  {
+    id: "sat", day: "Saturday", title: "Active Recovery + Pickup",
+    focus: "Pickup games, mobility & a deep tech sprint",
+    court: null, shooting: null,
+    exercises: [
+      ex("Dynamic Mobility Flow", 2, "8 min", 30, 60),
+      ex("Pickup Game", 1, "live", 120, 90),
+      ex("Hip / Ankle Mobility", 2, "10 min", 30, 60),
+      ex("Tech Sprint (see Tech tab)", 1, "60 min", 0, 60),
+    ],
+  },
+  {
+    id: "sun", day: "Sunday", title: "Mobility + Tech Sprint",
+    focus: "Stretching, recovery & component architecture reps",
+    court: null, shooting: null,
+    exercises: [
+      ex("Full-Body Stretch", 2, "12 min", 30, 60),
+      ex("Foam Rolling", 2, "8 min", 30, 60),
+      ex("Easy Shooting", 1, "100 makes", 0, 60),
+      ex("Tech Sprint (see Tech tab)", 1, "60 min", 0, 60),
+    ],
+  },
+];
+
+/* ------------------------------- Nutrition -------------------------------- */
+const MEALS = [
+  {
+    name: "Breakfast — Power Start", time: "7:00 AM",
+    items: [
+      { food: "Whole eggs", raw: "200 g (4)", p: 24, c: 2, f: 20 },
+      { food: "Rolled oats", raw: "75 g", p: 9, c: 49, f: 5 },
+      { food: "Banana", raw: "120 g", p: 1, c: 27, f: 0 },
+      { food: "Peanut butter", raw: "20 g", p: 6, c: 4, f: 11 },
+    ],
+  },
+  {
+    name: "Mid-Morning — Curd Bowl", time: "10:30 AM",
+    items: [
+      { food: "Greek yogurt / hung curd", raw: "250 g", p: 22, c: 9, f: 8 },
+      { food: "Whey protein", raw: "30 g", p: 24, c: 2, f: 1 },
+      { food: "Almonds", raw: "20 g", p: 4, c: 4, f: 10 },
+      { food: "Apple", raw: "150 g", p: 0, c: 21, f: 0 },
+    ],
+  },
+  {
+    name: "Lunch — Chicken & Rice", time: "1:30 PM",
+    items: [
+      { food: "Chicken breast (raw)", raw: "220 g", p: 50, c: 0, f: 6 },
+      { food: "Basmati rice (raw)", raw: "110 g", p: 8, c: 87, f: 1 },
+      { food: "Mixed vegetables", raw: "150 g", p: 3, c: 11, f: 0 },
+      { food: "Cooked dal", raw: "150 g", p: 6, c: 17, f: 2 },
+      { food: "Olive oil", raw: "12 g", p: 0, c: 0, f: 12 },
+    ],
+  },
+  {
+    name: "Pre-Workout — Paneer Wrap", time: "5:00 PM",
+    items: [
+      { food: "Paneer", raw: "100 g", p: 18, c: 4, f: 22 },
+      { food: "Whole-wheat roti", raw: "80 g flour (2)", p: 10, c: 54, f: 3 },
+      { food: "Curd", raw: "100 g", p: 4, c: 5, f: 4 },
+    ],
+  },
+  {
+    name: "Dinner — Fish & Sweet Potato", time: "8:30 PM",
+    items: [
+      { food: "Fish (raw)", raw: "200 g", p: 38, c: 0, f: 8 },
+      { food: "Sweet potato", raw: "200 g", p: 3, c: 40, f: 0 },
+      { food: "Sautéed greens + ghee", raw: "150 g + 8 g", p: 4, c: 8, f: 8 },
+    ],
+  },
+];
+const kcalOf = (m) => m.items.reduce((s, i) => s + i.p * 4 + i.c * 4 + i.f * 9, 0);
+const macroOf = (m) =>
+  m.items.reduce((a, i) => ({ p: a.p + i.p, c: a.c + i.c, f: a.f + i.f }), { p: 0, c: 0, f: 0 });
+
+const GROCERY = [
+  { cat: "Protein", items: ["Eggs (2 dozen)", "Chicken breast (1.5 kg)", "Fish fillets (1.5 kg)", "Paneer (700 g)", "Greek yogurt / curd (2 kg)", "Whey protein (1 tub)"] },
+  { cat: "Carbs", items: ["Rolled oats (500 g)", "Basmati rice (2 kg)", "Whole-wheat flour (1 kg)", "Sweet potato (1.5 kg)", "Bananas (1 dozen)", "Apples (1 dozen)"] },
+  { cat: "Fats & extras", items: ["Peanut butter (1 jar)", "Almonds (250 g)", "Olive oil (500 ml)", "Ghee (250 g)"] },
+  { cat: "Produce", items: ["Mixed vegetables (2 kg)", "Spinach / greens (1 kg)", "Dal / lentils (1 kg)", "Onion, tomato, ginger, garlic"] },
+];
+
+/* ============================ Small UI atoms ============================== */
+function Panel({ children, className = "" }) {
+  return (
+    <div className={"rounded-2xl border border-gray-800 bg-gray-900/70 shadow-xl " + className}>
+      {children}
+    </div>
+  );
+}
+
+function StatChip({ icon: Icon, label, value, tone = "yellow" }) {
+  const toneMap = {
+    yellow: "text-yellow-400",
+    lime: "text-lime-400",
+    emerald: "text-emerald-400",
+    slate: "text-slate-300",
+  };
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-gray-800 bg-gray-950/60 px-3 py-2">
+      <Icon className={"h-4 w-4 " + (toneMap[tone] || toneMap.yellow)} />
+      <div className="leading-tight">
+        <div className={"font-mono text-sm font-bold " + (toneMap[tone] || toneMap.yellow)}>{value}</div>
+        <div className="text-[10px] uppercase tracking-wider text-gray-500">{label}</div>
+      </div>
+    </div>
+  );
+}
+
+function CourtBox({ art }) {
+  return (
+    <pre className="bg-gray-950 text-yellow-400 font-mono p-5 rounded-2xl text-xs overflow-x-auto border border-gray-800 shadow-xl leading-snug whitespace-pre">{art}</pre>
+  );
+}
+
+/* ============================ Visual Brain Map =========================== */
+const FILL_BY_LEVEL = {
+  0: "fill-gray-700",
+  1: "fill-yellow-700",
+  2: "fill-yellow-500",
+  3: "fill-lime-500",
+  4: "fill-emerald-400",
+  5: "fill-emerald-300",
+};
+const TEXT_BY_LEVEL = {
+  0: "text-gray-500",
+  1: "text-yellow-600",
+  2: "text-yellow-400",
+  3: "text-lime-400",
+  4: "text-emerald-400",
+  5: "text-emerald-300",
+};
+
+function levelFromXp(xp) {
+  if (xp >= 600) return 5;
+  if (xp >= 450) return 4;
+  if (xp >= 300) return 3;
+  if (xp >= 150) return 2;
+  if (xp > 0) return 1;
+  return 0;
+}
+
+function BrainMap({ regionXp }) {
+  // Node clusters per lobe. Each lobe shows 5 nodes; nodes <= level glow.
+  const clusters = {
+    design: [
+      { cx: 78, cy: 70 }, { cx: 96, cy: 58 }, { cx: 70, cy: 94 },
+      { cx: 100, cy: 86 }, { cx: 84, cy: 112 },
+    ],
+    logic: [
+      { cx: 150, cy: 50 }, { cx: 170, cy: 70 }, { cx: 144, cy: 84 },
+      { cx: 172, cy: 100 }, { cx: 152, cy: 116 },
+    ],
+    architecture: [
+      { cx: 120, cy: 130 }, { cx: 100, cy: 150 }, { cx: 140, cy: 150 },
+      { cx: 118, cy: 168 }, { cx: 120, cy: 110 },
+    ],
+  };
+
+  return (
+    <div className="flex flex-col items-center">
+      <svg viewBox="0 0 240 210" className="w-full max-w-xs">
+        {/* Brain silhouette */}
+        <path
+          d="M120 18 C70 18 40 50 44 88 C30 100 32 132 56 142 C58 170 92 188 120 180 C148 188 182 170 184 142 C208 132 210 100 196 88 C200 50 170 18 120 18 Z"
+          className="fill-gray-900 stroke-gray-700"
+          strokeWidth="2"
+        />
+        <line x1="120" y1="22" x2="120" y2="178" className="stroke-gray-800" strokeWidth="1.5" strokeDasharray="3 4" />
+        {/* connective lines */}
+        {REGIONS.map((r) => {
+          const lvl = levelFromXp(regionXp[r.id] || 0);
+          const nodes = clusters[r.id];
+          return (
+            <g key={r.id}>
+              {nodes.map((n, i) => (
+                <line
+                  key={"l" + i}
+                  x1={nodes[0].cx} y1={nodes[0].cy} x2={n.cx} y2={n.cy}
+                  className={i < lvl ? "stroke-emerald-500/40" : "stroke-gray-800"}
+                  strokeWidth="1"
+                />
+              ))}
+            </g>
+          );
+        })}
+        {/* nodes */}
+        {REGIONS.map((r) => {
+          const lvl = levelFromXp(regionXp[r.id] || 0);
+          return clusters[r.id].map((n, i) => {
+            const on = i < lvl;
+            const isEdge = i === lvl - 1;
+            return (
+              <circle
+                key={r.id + i}
+                cx={n.cx} cy={n.cy} r={on ? 6 : 4.5}
+                className={(on ? FILL_BY_LEVEL[lvl] : "fill-gray-700") + (isEdge ? " animate-pulse" : "")}
+                style={on ? { filter: "drop-shadow(0 0 5px rgba(163,230,53,0.7))" } : undefined}
+              />
+            );
+          });
+        })}
+      </svg>
+
+      <div className="mt-4 grid w-full grid-cols-3 gap-2">
+        {REGIONS.map((r) => {
+          const xp = regionXp[r.id] || 0;
+          const lvl = levelFromXp(xp);
+          return (
+            <div key={r.id} className="rounded-xl border border-gray-800 bg-gray-950/60 p-3 text-center">
+              <div className="text-xs font-semibold text-gray-300">{r.label}</div>
+              <div className={"font-mono text-lg font-black " + TEXT_BY_LEVEL[lvl]}>L{lvl}</div>
+              <div className="text-[10px] text-gray-500">{xp} XP</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ====================== Continuous workout engine ======================== */
+function buildSteps(workout) {
+  const steps = [];
+  workout.exercises.forEach((e) => {
+    for (let s = 1; s <= e.sets; s++) {
+      steps.push({
+        kind: "work",
+        name: e.name,
+        detail: `Set ${s} of ${e.sets} — ${e.reps}`,
+        say: `${e.name}. Set ${s} of ${e.sets}. ${e.reps}.`,
+        seconds: e.workSec,
+      });
+      const lastSetOfLastEx = s === e.sets && e === workout.exercises[workout.exercises.length - 1];
+      if (!lastSetOfLastEx && e.restSec > 0) {
+        steps.push({
+          kind: "rest",
+          name: "Rest",
+          detail: `${e.restSec}s before next set`,
+          say: `Rest ${e.restSec} seconds.`,
+          seconds: e.restSec,
+        });
+      }
+    }
+  });
+  steps.push({ kind: "done", name: "Session complete", detail: "Great work.", say: "Session complete. Great work today.", seconds: 0 });
+  return steps;
+}
+
+function fmt(sec) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function WorkoutEngine({ workout, voice, audioRef }) {
+  const steps = useMemo(() => buildSteps(workout), [workout]);
+  const [idx, setIdx] = useState(0);
+  const [remain, setRemain] = useState(steps[0] ? steps[0].seconds : 0);
+  const [running, setRunning] = useState(false);
+  const idxRef = useRef(0);
+  const remainRef = useRef(remain);
+  const tenWarnedRef = useRef(false);
+
+  // keep refs in sync
+  useEffect(() => { idxRef.current = idx; }, [idx]);
+  useEffect(() => { remainRef.current = remain; }, [remain]);
+
+  const step = steps[idx] || steps[steps.length - 1];
+
+  const announce = useCallback((i) => {
+    const st = steps[i];
+    if (st) voice.speak(st.say);
+  }, [steps, voice]);
+
+  const goTo = useCallback((i) => {
+    const clamped = Math.max(0, Math.min(i, steps.length - 1));
+    tenWarnedRef.current = false;
+    setIdx(clamped);
+    setRemain(steps[clamped].seconds);
+    announce(clamped);
+  }, [steps, announce]);
+
+  const reset = useCallback(() => {
+    setRunning(false);
+    tenWarnedRef.current = false;
+    setIdx(0);
+    setRemain(steps[0].seconds);
+    voice.cancel();
+  }, [steps, voice]);
+
+  const start = useCallback(() => {
+    if (steps[idxRef.current] && steps[idxRef.current].kind === "done") return;
+    setRunning(true);
+    // first announce on start
+    if (remainRef.current === steps[idxRef.current].seconds) announce(idxRef.current);
+    if (audioRef && audioRef.current) {
+      audioRef.current.play().catch(() => {});
+    }
+  }, [steps, announce, audioRef]);
+
+  const pause = useCallback(() => {
+    setRunning(false);
+    voice.cancel();
+  }, [voice]);
+
+  // ticking
+  useEffect(() => {
+    if (!running) return;
+    const t = setInterval(() => {
+      const cur = steps[idxRef.current];
+      if (!cur || cur.kind === "done") { setRunning(false); return; }
+      const next = remainRef.current - 1;
+      if (next === 10 && cur.kind === "rest" && !tenWarnedRef.current) {
+        tenWarnedRef.current = true;
+        voice.speak("Ten seconds.", { interrupt: false });
+      }
+      if (next <= 0) {
+        const ni = idxRef.current + 1;
+        if (ni < steps.length) {
+          tenWarnedRef.current = false;
+          idxRef.current = ni;
+          setIdx(ni);
+          setRemain(steps[ni].seconds);
+          announce(ni);
+          if (steps[ni].kind === "done") setRunning(false);
+        } else {
+          setRunning(false);
+        }
+      } else {
+        setRemain(next);
+      }
+    }, 1000);
+    return () => clearInterval(t);
+  }, [running, steps, voice, announce]);
+
+  // Media Session — lock screen / AirPods controls
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: `${step.name} — ${step.detail}`,
+        artist: workout.title,
+        album: "Athlete OS",
+      });
+      navigator.mediaSession.setActionHandler("play", () => start());
+      navigator.mediaSession.setActionHandler("pause", () => pause());
+      navigator.mediaSession.setActionHandler("nexttrack", () => goTo(idxRef.current + 1));
+      navigator.mediaSession.setActionHandler("previoustrack", () => goTo(idxRef.current - 1));
+      navigator.mediaSession.playbackState = running ? "playing" : "paused";
+    } catch {}
+  }, [step, running, workout.title, start, pause, goTo]);
+
+  const total = steps.length - 1; // exclude "done"
+  const progress = Math.min(idx, total);
+  const isWork = step.kind === "work";
+  const isRest = step.kind === "rest";
+  const isDone = step.kind === "done";
+
+  const ringTone = isRest ? "text-yellow-400" : isDone ? "text-emerald-400" : "text-lime-400";
+
+  return (
+    <Panel className="p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm font-semibold text-gray-200">
+          <Activity className="h-4 w-4 text-lime-400" /> Continuous Flow
+        </div>
+        <span className="font-mono text-xs text-gray-500">
+          {progress + (isDone ? 0 : 1)} / {total}
+        </span>
+      </div>
+
+      {/* progress bar */}
+      <div className="mb-5 h-1.5 w-full overflow-hidden rounded-full bg-gray-800">
+        <div
+          className="h-full rounded-full bg-lime-400 transition-all duration-500"
+          style={{ width: `${Math.round((progress / total) * 100)}%` }}
+        />
+      </div>
+
+      <div className="flex flex-col items-center">
+        <div className={"text-[11px] font-bold uppercase tracking-widest " + (isRest ? "text-yellow-400" : isDone ? "text-emerald-400" : "text-lime-400")}>
+          {isRest ? "Rest" : isDone ? "Finished" : "Work"}
+        </div>
+        <div className="mt-1 text-center text-xl font-black text-white">{step.name}</div>
+        <div className="mb-4 text-center text-sm text-gray-400">{step.detail}</div>
+
+        <div className={"font-mono text-6xl font-black tabular-nums " + ringTone}>
+          {isDone ? "✓" : fmt(remain)}
+        </div>
+
+        <div className="mt-5 flex items-center gap-3">
+          <button
+            onClick={() => goTo(idx - 1)}
+            className="rounded-full border border-gray-700 bg-gray-800 p-3 text-gray-300 transition active:scale-95 hover:border-gray-600"
+            aria-label="Previous step"
+          >
+            <RotateCcw className="h-5 w-5" />
+          </button>
+          {running ? (
+            <button
+              onClick={pause}
+              className="flex items-center gap-2 rounded-full bg-yellow-400 px-7 py-4 font-bold text-gray-950 shadow-lg shadow-yellow-400/20 transition active:scale-95"
+            >
+              <Pause className="h-6 w-6" /> Pause
+            </button>
+          ) : (
+            <button
+              onClick={start}
+              disabled={isDone}
+              className="flex items-center gap-2 rounded-full bg-lime-400 px-7 py-4 font-bold text-gray-950 shadow-lg shadow-lime-400/20 transition active:scale-95 disabled:opacity-40"
+            >
+              <Play className="h-6 w-6" /> {idx === 0 && remain === steps[0].seconds ? "Start" : "Resume"}
+            </button>
+          )}
+          <button
+            onClick={() => goTo(idx + 1)}
+            className="rounded-full border border-gray-700 bg-gray-800 p-3 text-gray-300 transition active:scale-95 hover:border-gray-600"
+            aria-label="Skip step"
+          >
+            <SkipForward className="h-5 w-5" />
+          </button>
+        </div>
+
+        <button onClick={reset} className="mt-4 text-xs text-gray-500 underline-offset-2 hover:text-gray-300 hover:underline">
+          Reset session
+        </button>
+      </div>
+
+      <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] text-gray-500">
+        <Volume2 className="h-3 w-3" /> Auto-advances & announces hands-free. Use lock-screen / AirPods play-pause.
+      </p>
+    </Panel>
+  );
+}
+
+/* ===================== Free-Throw hands-free loop ======================== */
+function FreeThrowLoop({ voice }) {
+  const [stats, setStats] = usePersistentState("athleteos.v1.ft", { makes: 0, attempts: 0 });
+  const [shot, setShot] = useState(stats.attempts + 1);
+  const [phase, setPhase] = useState("idle"); // idle | prompt | listening | logged
+  const [active, setActive] = useState(false);
+  const [heard, setHeard] = useState("");
+  const recogRef = useRef(null);
+  const activeRef = useRef(false);
+  const shotRef = useRef(shot);
+  useEffect(() => { activeRef.current = active; }, [active]);
+  useEffect(() => { shotRef.current = shot; }, [shot]);
+
+  const recogSupported =
+    typeof window !== "undefined" &&
+    ("webkitSpeechRecognition" in window || "SpeechRecognition" in window);
+
+  const log = useCallback((made) => {
+    setStats((s) => ({ makes: s.makes + (made ? 1 : 0), attempts: s.attempts + 1 }));
+    setHeard(made ? "✓ make" : "✗ miss");
+    setPhase("logged");
+  }, [setStats]);
+
+  const stopRecog = () => {
+    try { if (recogRef.current) recogRef.current.stop(); } catch {}
+  };
+
+  const listen = useCallback(() => {
+    if (!recogSupported) { setPhase("listening"); return; } // manual fallback
+    try {
+      const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const r = new Ctor();
+      recogRef.current = r;
+      r.lang = "en-IN";
+      r.interimResults = false;
+      r.maxAlternatives = 3;
+      r.continuous = false;
+      setPhase("listening");
+      r.onresult = (e) => {
+        const text = Array.from(e.results)
+          .map((res) => res[0].transcript)
+          .join(" ")
+          .toLowerCase();
+        setHeard(text);
+        const made = /\b(hit|yes|yeah|yep|make|made|in|good|swish)\b/.test(text);
+        const missed = /\b(miss|missed|no|nope|out|brick|off)\b/.test(text);
+        if (made && !missed) log(true);
+        else if (missed) log(false);
+        else { setPhase("listening"); voice.speak("Sorry, hit or miss?", { onend: () => { try { r.start(); } catch {} } }); }
+      };
+      r.onerror = () => { setPhase("listening"); }; // fall back to buttons
+      r.onend = () => {};
+      r.start();
+    } catch {
+      setPhase("listening");
+    }
+  }, [recogSupported, log, voice]);
+
+  const askResult = useCallback(() => {
+    setPhase("prompt");
+    voice.speak("Hit or miss?", { onend: () => { if (activeRef.current) listen(); } });
+  }, [voice, listen]);
+
+  const callShot = useCallback(() => {
+    setHeard("");
+    setPhase("prompt");
+    voice.speak(`Shot ${shotRef.current}. Shoot when ready.`, {
+      onend: () => {
+        setTimeout(() => { if (activeRef.current) askResult(); }, 2600);
+      },
+    });
+  }, [voice, askResult]);
+
+  // advance to next shot after a result is logged, if loop still active
+  useEffect(() => {
+    if (phase !== "logged") return;
+    setShot((s) => s + 1);
+    const t = setTimeout(() => { if (activeRef.current) callShot(); }, 1400);
+    return () => clearTimeout(t);
+  }, [phase, callShot]);
+
+  const startLoop = () => {
+    setActive(true);
+    activeRef.current = true;
+    setShot(stats.attempts + 1);
+    shotRef.current = stats.attempts + 1;
+    callShot();
+  };
+  const stopLoop = () => {
+    setActive(false);
+    activeRef.current = false;
+    stopRecog();
+    voice.cancel();
+    setPhase("idle");
+  };
+  const manual = (made) => { stopRecog(); log(made); };
+  const resetStats = () => { stopLoop(); setStats({ makes: 0, attempts: 0 }); setShot(1); };
+
+  const pct = stats.attempts ? Math.round((stats.makes / stats.attempts) * 100) : 0;
+
+  const phaseLabel = {
+    idle: "Ready",
+    prompt: "Speaking…",
+    listening: recogSupported ? "Listening — say hit or miss" : "Tap your result",
+    logged: "Logged",
+  }[phase];
+
+  return (
+    <Panel className="p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm font-semibold text-gray-200">
+          <Crosshair className="h-4 w-4 text-yellow-400" /> Free-Throw Loop
+        </div>
+        <span className="font-mono text-xs text-gray-500">{recogSupported ? "voice + manual" : "manual mode"}</span>
+      </div>
+
+      <div className="mb-4 grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-xl border border-gray-800 bg-gray-950/60 p-3">
+          <div className="font-mono text-2xl font-black text-lime-400">{pct}%</div>
+          <div className="text-[10px] uppercase tracking-wider text-gray-500">Make rate</div>
+        </div>
+        <div className="rounded-xl border border-gray-800 bg-gray-950/60 p-3">
+          <div className="font-mono text-2xl font-black text-emerald-400">{stats.makes}</div>
+          <div className="text-[10px] uppercase tracking-wider text-gray-500">Makes</div>
+        </div>
+        <div className="rounded-xl border border-gray-800 bg-gray-950/60 p-3">
+          <div className="font-mono text-2xl font-black text-gray-300">{stats.attempts}</div>
+          <div className="text-[10px] uppercase tracking-wider text-gray-500">Attempts</div>
+        </div>
+      </div>
+
+      <div className="mb-4 rounded-xl border border-gray-800 bg-gray-950/60 p-4 text-center">
+        <div className="text-[11px] uppercase tracking-widest text-yellow-400">Shot {shot}</div>
+        <div className="mt-1 text-sm font-medium text-gray-200">{phaseLabel}</div>
+        {heard ? <div className="mt-1 font-mono text-xs text-gray-500">heard: “{heard}”</div> : null}
+      </div>
+
+      {/* manual / fallback result buttons (always available) */}
+      <div className="mb-3 grid grid-cols-2 gap-3">
+        <button
+          onClick={() => manual(true)}
+          className="rounded-xl bg-lime-400 py-3 font-bold text-gray-950 transition active:scale-95"
+        >
+          Hit
+        </button>
+        <button
+          onClick={() => manual(false)}
+          className="rounded-xl border border-gray-700 bg-gray-800 py-3 font-bold text-gray-200 transition active:scale-95"
+        >
+          Miss
+        </button>
+      </div>
+
+      <div className="flex items-center gap-3">
+        {active ? (
+          <button onClick={stopLoop} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-yellow-400 py-3 font-bold text-gray-950 transition active:scale-95">
+            <MicOff className="h-5 w-5" /> Stop loop
+          </button>
+        ) : (
+          <button onClick={startLoop} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-400 py-3 font-bold text-gray-950 transition active:scale-95">
+            <Mic className="h-5 w-5" /> Start hands-free loop
+          </button>
+        )}
+        <button onClick={resetStats} className="rounded-xl border border-gray-700 bg-gray-800 px-4 py-3 text-gray-400 transition active:scale-95">
+          <RotateCcw className="h-5 w-5" />
+        </button>
+      </div>
+
+      {!recogSupported && (
+        <p className="mt-3 text-center text-[11px] text-gray-500">
+          Microphone recognition isn't available in this browser — the loop still calls each shot, just tap Hit or Miss.
+        </p>
+      )}
+    </Panel>
+  );
+}
+
+/* ============================== Dashboard ================================ */
+function Dashboard({ regionXp, totalXp, codingHours, addHours, completedCount, voice, goWorkout }) {
+  const overallLevel = levelFromXp(totalXp / 3);
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-black tracking-tight text-white">Athlete OS</h1>
+        <p className="text-sm text-gray-400">Train the body. Wire the brain. Ship the work.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <StatChip icon={Zap} label="Total XP" value={totalXp} tone="yellow" />
+        <StatChip icon={Trophy} label="Overall level" value={"L" + overallLevel} tone="emerald" />
+        <StatChip icon={GraduationCap} label="Days done" value={`${completedCount}/30`} tone="lime" />
+        <StatChip icon={Clock} label="Coding hrs" value={codingHours.toFixed(1)} tone="slate" />
+      </div>
+
+      <Panel className="p-5">
+        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-200">
+          <Brain className="h-4 w-4 text-lime-400" /> Visual Brain Map
+        </div>
+        <BrainMap regionXp={regionXp} />
+      </Panel>
+
+      <Panel className="p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-semibold text-gray-200">
+            <Clock className="h-4 w-4 text-yellow-400" /> Log coding time
+          </div>
+          <span className="font-mono text-xs text-gray-500">{codingHours.toFixed(1)} h total</span>
+        </div>
+        <div className="flex gap-2">
+          {[0.5, 1, 2].map((h) => (
+            <button
+              key={h}
+              onClick={() => addHours(h)}
+              className="flex-1 rounded-xl border border-gray-700 bg-gray-800 py-2.5 text-sm font-semibold text-gray-200 transition active:scale-95 hover:border-lime-500/50"
+            >
+              +{h} h
+            </button>
+          ))}
+        </div>
+      </Panel>
+
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-200">
+          <Dumbbell className="h-4 w-4 text-lime-400" /> Weekly Training Matrix
+        </div>
+        <div className="space-y-2">
+          {WEEK_PLAN.map((d) => (
+            <button
+              key={d.id}
+              onClick={() => goWorkout(d.id)}
+              className="flex w-full items-center justify-between rounded-2xl border border-gray-800 bg-gray-900/70 p-4 text-left transition active:scale-[0.99] hover:border-lime-500/40"
+            >
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-gray-500">{d.day}</div>
+                <div className="font-semibold text-white">{d.title}</div>
+                <div className="text-xs text-gray-400">{d.focus}</div>
+              </div>
+              <ChevronRight className="h-5 w-5 shrink-0 text-gray-600" />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ Tech tracker =============================== */
+function TechTracker({ done, toggleDay, regionXp, totalXp }) {
+  const openYT = (q) => {
+    const url = "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
+    try { window.open(url, "_blank", "noopener"); } catch {}
+  };
+  const weeks = [1, 2, 3, 4];
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-black tracking-tight text-white">Tech Skill Tracker</h1>
+        <p className="text-sm text-gray-400">30-day gamified curriculum · {totalXp} XP earned</p>
+      </div>
+
+      <Panel className="p-5">
+        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-200">
+          <Brain className="h-4 w-4 text-lime-400" /> Skill Brain — live
+        </div>
+        <BrainMap regionXp={regionXp} />
+      </Panel>
+
+      {weeks.map((w) => {
+        const days = CURRICULUM.filter((d) => d.week === w);
+        const doneInWeek = days.filter((d) => done[d.day]).length;
+        return (
+          <div key={w}>
+            <div className="mb-2 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-bold text-white">
+                  <span className="font-mono text-yellow-400">W{w}</span> {WEEK_META[w].name}
+                </div>
+                <div className="text-xs text-gray-500">{WEEK_META[w].note}</div>
+              </div>
+              <span className="font-mono text-xs text-gray-500">{doneInWeek}/{days.length}</span>
+            </div>
+            <div className="space-y-2">
+              {days.map((d) => {
+                const isDone = !!done[d.day];
+                return (
+                  <Panel key={d.day} className={isDone ? "p-4 ring-1 ring-lime-500/30" : "p-4"}>
+                    <div className="flex items-start gap-3">
+                      <button onClick={() => toggleDay(d.day)} className="mt-0.5 shrink-0" aria-label="Toggle day complete">
+                        {isDone ? (
+                          <CheckCircle2 className="h-6 w-6 text-lime-400" />
+                        ) : (
+                          <Circle className="h-6 w-6 text-gray-600" />
+                        )}
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] text-gray-500">Day {d.day}</span>
+                          <span className="rounded-full bg-gray-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-yellow-400">
+                            {d.region}
+                          </span>
+                          <span className="ml-auto font-mono text-[11px] text-lime-400">+{d.xp} XP</span>
+                        </div>
+                        <div className={"mt-0.5 font-semibold " + (isDone ? "text-gray-400 line-through" : "text-white")}>
+                          {d.title}
+                        </div>
+                        <div className="text-xs text-gray-400">{d.task}</div>
+                        <button
+                          onClick={() => openYT(d.q)}
+                          className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950 px-3 py-1.5 text-xs font-medium text-yellow-400 transition active:scale-95 hover:border-yellow-500/50"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" /> Watch drill
+                        </button>
+                      </div>
+                    </div>
+                  </Panel>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ============================ Workout view ============================== */
+function WorkoutView({ selectedId, setSelectedId, voice, audioRef }) {
+  const workout = WEEK_PLAN.find((d) => d.id === selectedId) || WEEK_PLAN[0];
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-black tracking-tight text-white">Daily Workout</h1>
+        <p className="text-sm text-gray-400">Continuous flow · auto voice cues</p>
+      </div>
+
+      {/* day selector */}
+      <div className="-mx-1 flex gap-2 overflow-x-auto pb-1">
+        {WEEK_PLAN.map((d) => {
+          const sel = d.id === selectedId;
+          return (
+            <button
+              key={d.id}
+              onClick={() => setSelectedId(d.id)}
+              className={
+                "shrink-0 rounded-xl border px-4 py-2 text-sm font-semibold transition active:scale-95 " +
+                (sel
+                  ? "border-lime-400 bg-lime-400 text-gray-950"
+                  : "border-gray-800 bg-gray-900 text-gray-300")
+              }
+            >
+              {d.day.slice(0, 3)}
+            </button>
+          );
+        })}
+      </div>
+
+      <Panel className="p-5">
+        <div className="text-[11px] uppercase tracking-wider text-gray-500">{workout.day}</div>
+        <div className="text-lg font-black text-white">{workout.title}</div>
+        <div className="text-sm text-gray-400">{workout.focus}</div>
+      </Panel>
+
+      <WorkoutEngine workout={workout} voice={voice} audioRef={audioRef} />
+
+      {/* exercise list */}
+      <Panel className="p-5">
+        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-200">
+          <ListChecks className="h-4 w-4 text-lime-400" /> Session breakdown
+        </div>
+        <div className="divide-y divide-gray-800">
+          {workout.exercises.map((e, i) => (
+            <div key={i} className="flex items-center justify-between py-2.5">
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-xs text-gray-600">{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-medium text-gray-200">{e.name}</span>
+              </div>
+              <span className="font-mono text-xs text-gray-400">
+                {e.sets} × {e.reps}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      {workout.shooting && <FreeThrowLoop voice={voice} />}
+
+      {workout.court && (
+        <div>
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-200">
+            <Target className="h-4 w-4 text-yellow-400" /> Court setup
+          </div>
+          <CourtBox art={workout.court} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================ Mom's Kitchen ============================= */
+function Kitchen() {
+  const [eaten, setEaten] = usePersistentState("athleteos.v1.meals", {});
+  const [checked, setChecked] = usePersistentState("athleteos.v1.grocery", {});
+  const [prepOn, setPrepOn] = usePersistentState("athleteos.v1.prep", false);
+
+  const planned = MEALS.reduce((s, m) => s + kcalOf(m), 0);
+  const eatenKcal = MEALS.reduce((s, m, i) => (eaten[i] ? s + kcalOf(m) : s), 0);
+  const totalMacro = MEALS.reduce(
+    (a, m) => {
+      const mm = macroOf(m);
+      return { p: a.p + mm.p, c: a.c + mm.c, f: a.f + mm.f };
+    },
+    { p: 0, c: 0, f: 0 }
+  );
+
+  const toggleMeal = (i) => setEaten((e) => ({ ...e, [i]: !e[i] }));
+  const toggleItem = (key) => setChecked((c) => ({ ...c, [key]: !c[key] }));
+
+  const notifyPrep = () => {
+    const next = !prepOn;
+    setPrepOn(next);
+    if (next && typeof Notification !== "undefined") {
+      try {
+        Notification.requestPermission().then((perm) => {
+          if (perm === "granted") new Notification("Meal prep reminders on", { body: "We'll cue you before each meal window." });
+        });
+      } catch {}
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-black tracking-tight text-white">Mom's Kitchen</h1>
+        <p className="text-sm text-gray-400">Clean prep, made simple · target 3,400 kcal</p>
+      </div>
+
+      {/* daily totals */}
+      <Panel className="p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-semibold text-gray-200">
+            <Flame className="h-4 w-4 text-yellow-400" /> Today's intake
+          </div>
+          <span className="font-mono text-xs text-gray-500">{eatenKcal} / {planned} kcal</span>
+        </div>
+        <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-gray-800">
+          <div className="h-full rounded-full bg-yellow-400 transition-all duration-500" style={{ width: `${Math.min(100, Math.round((eatenKcal / planned) * 100))}%` }} />
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-xl border border-gray-800 bg-gray-950/60 p-3">
+            <div className="font-mono text-xl font-black text-lime-400">{totalMacro.p} g</div>
+            <div className="text-[10px] uppercase tracking-wider text-gray-500">Protein</div>
+          </div>
+          <div className="rounded-xl border border-gray-800 bg-gray-950/60 p-3">
+            <div className="font-mono text-xl font-black text-yellow-400">{totalMacro.c} g</div>
+            <div className="text-[10px] uppercase tracking-wider text-gray-500">Carbs</div>
+          </div>
+          <div className="rounded-xl border border-gray-800 bg-gray-950/60 p-3">
+            <div className="font-mono text-xl font-black text-emerald-400">{totalMacro.f} g</div>
+            <div className="text-[10px] uppercase tracking-wider text-gray-500">Fats</div>
+          </div>
+        </div>
+        <button
+          onClick={notifyPrep}
+          className={
+            "mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition active:scale-95 " +
+            (prepOn ? "bg-lime-400 text-gray-950" : "border border-gray-700 bg-gray-800 text-gray-200")
+          }
+        >
+          <Timer className="h-4 w-4" /> {prepOn ? "Meal-prep reminders on" : "Turn on meal-prep reminders"}
+        </button>
+      </Panel>
+
+      {/* meals */}
+      <div className="space-y-3">
+        {MEALS.map((m, i) => {
+          const mm = macroOf(m);
+          const had = !!eaten[i];
+          return (
+            <Panel key={i} className={had ? "p-5 ring-1 ring-lime-500/30" : "p-5"}>
+              <div className="mb-3 flex items-start justify-between">
+                <div>
+                  <div className="font-bold text-white">{m.name}</div>
+                  <div className="text-xs text-gray-500">{m.time} · {kcalOf(m)} kcal</div>
+                </div>
+                <button onClick={() => toggleMeal(i)} aria-label="Mark meal eaten">
+                  {had ? <CheckCircle2 className="h-6 w-6 text-lime-400" /> : <Circle className="h-6 w-6 text-gray-600" />}
+                </button>
+              </div>
+              <div className="overflow-hidden rounded-xl border border-gray-800">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-gray-950/70 text-gray-500">
+                      <th className="px-3 py-2 font-medium">Food</th>
+                      <th className="px-3 py-2 font-medium">Raw</th>
+                      <th className="px-2 py-2 text-right font-medium">P</th>
+                      <th className="px-2 py-2 text-right font-medium">C</th>
+                      <th className="px-3 py-2 text-right font-medium">F</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800">
+                    {m.items.map((it, j) => (
+                      <tr key={j} className="text-gray-300">
+                        <td className="px-3 py-2">{it.food}</td>
+                        <td className="px-3 py-2 font-mono text-gray-400">{it.raw}</td>
+                        <td className="px-2 py-2 text-right font-mono text-lime-400">{it.p}</td>
+                        <td className="px-2 py-2 text-right font-mono text-yellow-400">{it.c}</td>
+                        <td className="px-3 py-2 text-right font-mono text-emerald-400">{it.f}</td>
+                      </tr>
+                    ))}
+                    <tr className="bg-gray-950/50 font-bold text-gray-200">
+                      <td className="px-3 py-2" colSpan={2}>Total</td>
+                      <td className="px-2 py-2 text-right font-mono text-lime-400">{mm.p}</td>
+                      <td className="px-2 py-2 text-right font-mono text-yellow-400">{mm.c}</td>
+                      <td className="px-3 py-2 text-right font-mono text-emerald-400">{mm.f}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </Panel>
+          );
+        })}
+      </div>
+
+      {/* grocery */}
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-200">
+          <Salad className="h-4 w-4 text-lime-400" /> Grocery checklist
+        </div>
+        <div className="space-y-3">
+          {GROCERY.map((g) => (
+            <Panel key={g.cat} className="p-4">
+              <div className="mb-2 text-xs font-bold uppercase tracking-wider text-yellow-400">{g.cat}</div>
+              <div className="space-y-1">
+                {g.items.map((it) => {
+                  const key = g.cat + "::" + it;
+                  const on = !!checked[key];
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => toggleItem(key)}
+                      className="flex w-full items-center gap-3 rounded-lg px-1 py-1.5 text-left transition hover:bg-gray-800/50"
+                    >
+                      {on ? (
+                        <CheckCircle2 className="h-5 w-5 shrink-0 text-lime-400" />
+                      ) : (
+                        <Circle className="h-5 w-5 shrink-0 text-gray-600" />
+                      )}
+                      <span className={on ? "text-sm text-gray-500 line-through" : "text-sm text-gray-200"}>{it}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </Panel>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ================================ Root ================================== */
+const TABS = [
+  { id: "dashboard", label: "Athlete", icon: Activity },
+  { id: "tech", label: "Tech", icon: Code2 },
+  { id: "workout", label: "Workout", icon: Dumbbell },
+  { id: "kitchen", label: "Kitchen", icon: UtensilsCrossed },
+];
+
+export default function App() {
+  const [tab, setTab] = usePersistentState("athleteos.v1.tab", "dashboard");
+  const [done, setDone] = usePersistentState("athleteos.v1.curriculum", {});
+  const [codingHours, setCodingHours] = usePersistentState("athleteos.v1.hours", 0);
+  const [workoutDay, setWorkoutDay] = usePersistentState("athleteos.v1.workoutDay", "mon");
+  const voice = useVoice();
+  const audioRef = useRef(null);
+  const silentUrlRef = useRef(null);
+
+  useEffect(() => {
+    silentUrlRef.current = makeSilentWavUrl();
+    return () => {
+      try { if (silentUrlRef.current) URL.revokeObjectURL(silentUrlRef.current); } catch {}
+    };
+  }, []);
+
+  // XP derived from completed curriculum days
+  const regionXp = useMemo(() => {
+    const acc = { design: 0, logic: 0, architecture: 0 };
+    CURRICULUM.forEach((d) => { if (done[d.day]) acc[d.region] += d.xp; });
+    return acc;
+  }, [done]);
+  const totalXp = regionXp.design + regionXp.logic + regionXp.architecture;
+  const completedCount = Object.values(done).filter(Boolean).length;
+
+  const toggleDay = (day) => setDone((d) => ({ ...d, [day]: !d[day] }));
+  const addHours = (h) => setCodingHours((v) => Math.round((v + h) * 10) / 10);
+  const goWorkout = (id) => { setWorkoutDay(id); setTab("workout"); };
+
+  return (
+    <div className="min-h-screen bg-gray-950 text-gray-100">
+      {/* keeps Media Session controls alive on the lock screen */}
+      <audio ref={audioRef} src={silentUrlRef.current || undefined} loop preload="auto" className="hidden" />
+
+      <main className="mx-auto max-w-md px-4 pb-28 pt-6">
+        {tab === "dashboard" && (
+          <Dashboard
+            regionXp={regionXp}
+            totalXp={totalXp}
+            codingHours={codingHours}
+            addHours={addHours}
+            completedCount={completedCount}
+            voice={voice}
+            goWorkout={goWorkout}
+          />
+        )}
+        {tab === "tech" && (
+          <TechTracker done={done} toggleDay={toggleDay} regionXp={regionXp} totalXp={totalXp} />
+        )}
+        {tab === "workout" && (
+          <WorkoutView selectedId={workoutDay} setSelectedId={setWorkoutDay} voice={voice} audioRef={audioRef} />
+        )}
+        {tab === "kitchen" && <Kitchen />}
+      </main>
+
+      {/* bottom nav */}
+      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-800 bg-gray-950/95 backdrop-blur">
+        <div className="mx-auto flex max-w-md items-stretch">
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={
+                  "flex flex-1 flex-col items-center gap-1 py-3 transition " +
+                  (active ? "text-lime-400" : "text-gray-500")
+                }
+              >
+                <Icon className="h-5 w-5" />
+                <span className="text-[10px] font-semibold uppercase tracking-wide">{t.label}</span>
+                {active ? <span className="mt-0.5 h-0.5 w-6 rounded-full bg-lime-400" /> : <span className="mt-0.5 h-0.5 w-6" />}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
+  );
+}
