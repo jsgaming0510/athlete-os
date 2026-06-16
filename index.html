@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Athlete OS</title>
+
+  <!-- iPhone "install to home screen / native feel" tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Athlete OS" />
+  <meta name="theme-color" content="#090A0F" />
+  <link rel="apple-touch-icon" href="data:image/png;base64,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" />
+
+  <!-- React + Babel (JSX) + Tailwind, all from CDN. No build step needed. -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    html, body, #root { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: linear-gradient(160deg, #090A0F 0%, #0d0e16 55%, #12131C 100%);
+      background-attachment: fixed;
+      color: #E7E9F0;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: none;
+    }
+    /* Frosted glass surface */
+    .glass {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.09);
+      backdrop-filter: blur(26px);
+      -webkit-backdrop-filter: blur(26px);
+    }
+    ::-webkit-scrollbar { width: 0; height: 0; }
+    .no-tap { -webkit-tap-highlight-color: transparent; }
+    @keyframes pulseRep {
+      0% { transform: scale(0.86); opacity: 0.55; }
+      50% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(0.86); opacity: 0.55; }
+    }
+    @keyframes floaty {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    .rep-orb { animation: pulseRep 4s ease-in-out infinite; }
+    .safe-top { padding-top: env(safe-area-inset-top); }
+    .safe-bottom { padding-bottom: calc(env(safe-area-inset-bottom) + 84px); }
+    @media (prefers-reduced-motion: reduce) {
+      .rep-orb { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    /* =========================================================
+       COLOR SYSTEM
+       gym  = Electric Violet  #8B5CF6
+       court= Court Amber      #F59E0B
+       meal = Soft Emerald     #10B981
+       ========================================================= */
+    const C = {
+      gym:   { hex:'#8B5CF6', soft:'rgba(139,92,246,0.14)', ring:'rgba(139,92,246,0.45)' },
+      court: { hex:'#F59E0B', soft:'rgba(245,158,11,0.14)', ring:'rgba(245,158,11,0.45)' },
+      meal:  { hex:'#10B981', soft:'rgba(16,185,129,0.14)', ring:'rgba(16,185,129,0.45)' },
+      skill: { hex:'#60A5FA', soft:'rgba(96,165,250,0.14)', ring:'rgba(96,165,250,0.45)' },
+    };
+
+    /* =========================================================
+       PERSISTENT STATE HOOK  (localStorage, survives refresh)
+       ========================================================= */
+    function usePersistentState(key, initial) {
+      const [val, setVal] = useState(() => {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw != null ? JSON.parse(raw) : initial;
+        } catch (e) { return initial; }
+      });
+      useEffect(() => {
+        try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+      }, [key, val]);
+      return [val, setVal];
+    }
+
+    // A "today stamp" so daily checkmarks reset on a new day automatically.
+    const todayStamp = () => new Date().toISOString().slice(0,10);
+
+    /* =========================================================
+       DATA MATRIX  (hardcoded protocols)
+       ========================================================= */
+    const MEALS = [
+      { id:'m1', time:'06:30', title:'Meal 1 — Pre-Train Fuel',
+        items:['200g peeled bananas','2 slices whole wheat toast','32g (2 tbsp) peanut butter','500ml water'] },
+      { id:'m2', time:'10:30', title:'Meal 2 — Build',
+        items:['4 whole eggs','75g raw rolled oats cooked in 250ml whole milk','30g mixed almonds / walnuts'] },
+      { id:'m3', time:'14:00', title:'Meal 3 — Main Plate',
+        items:['200g raw chicken breast (or paneer)','130g raw basmati rice','50g raw yellow dal','large green salad'] },
+      { id:'sn', time:'16:30', title:'Snack',
+        items:['100g peeled banana','1 cup black coffee'] },
+      { id:'sup', time:'19:05', title:'Supplement Window — Post-Court',
+        items:['50g Dymatize whey (1.5 scoops)','5g pure creatine monohydrate','300ml cold whole milk','100g peeled banana','16g peanut butter'],
+        warn:'Drink immediately after mixing creatine to prevent degradation. Do NOT pre-mix.' },
+      { id:'m4', time:'20:30', title:'Meal 4 — Dinner',
+        items:['150g chicken / fish (or paneer)','3 whole wheat rotis (or 300g baked sweet potato)','steamed broccoli / carrots','1 tbsp extra virgin olive oil drizzle'] },
+      { id:'m5', time:'22:00', title:'Meal 5 — Night Repair',
+        items:['33g Dymatize whey (1 scoop)','250ml warm whole milk'] },
+    ];
+
+    // Gym split: keys are day numbers (3=Wed ... 6=Sat)
+    const GYM = {
+      3: { title:'Legs — Max Load & Strength',
+        warmup:{ label:'Dynamic Warm-up (7 min)', items:['60s arm circles','90s bodyweight squats','90s glute bridges','3 min leg swings'] },
+        lifts:[
+          { name:'Barbell Squats', sets:4, reps:6, tempo:'3-1-X' },
+          { name:'Romanian Deadlifts (RDLs)', sets:4, reps:8, tempo:'3-1-1' },
+          { name:'Bulgarian Split Squats', sets:3, reps:10, tempo:'2-1-1', note:'per leg' },
+          { name:'Seated Calf Raises', sets:4, reps:15, tempo:'2s hold at peak' },
+          { name:'Tibialis Raises', sets:3, reps:20, tempo:'bodyweight vs wall' },
+        ],
+        cooldown:{ label:'Static Flexibility (8 min)', items:['2 min seated forward fold','2 min couch stretch / side','2 min pigeon pose / side'] } },
+      4: { title:'Push — Upper Hypertrophy',
+        warmup:{ label:'Dynamic Warm-up (5 min)', items:['band dislocations','band pull-aparts','light pushups'] },
+        lifts:[
+          { name:'Flat Barbell Bench Press', sets:4, reps:8, tempo:'3-1-X' },
+          { name:'Overhead Barbell Press (OHP)', sets:4, reps:8, tempo:'strict standing' },
+          { name:'Incline Dumbbell Flyes', sets:3, reps:12 },
+          { name:'Cable Lateral Raises', sets:4, reps:15 },
+          { name:'Overhead Cable Tricep Extensions', sets:4, reps:12 },
+        ],
+        cooldown:{ label:'Mobility (5 min)', items:['2 min doorway chest stretch','90s overhead tricep stretch / arm'] } },
+      5: { title:'Pull — Width & Posterior Chain',
+        warmup:{ label:'Dynamic Warm-up (5 min)', items:['dead hangs','scapular pull-ups','cat-cow stretch'] },
+        lifts:[
+          { name:'Pronated Lat Pulldowns', sets:4, reps:10, tempo:'drive through elbows' },
+          { name:'T-Bar Rows', sets:4, reps:8, tempo:'strict posture' },
+          { name:'Weighted Pull-Ups (or Lat Cable Rows)', sets:3, reps:8 },
+          { name:'Rope Face Pulls', sets:4, reps:15, tempo:'hold 1s at forehead' },
+          { name:'Incline Dumbbell Bicep Curls', sets:4, reps:10, tempo:'full lower stretch' },
+        ],
+        cooldown:{ label:'Mobility (5 min)', items:["2 min child's pose",'90s thread-the-needle / side'] } },
+      6: { title:'Legs Vol. 2 — Power Output',
+        warmup:{ label:'Dynamic Warm-up (7 min)', items:['60s arm circles','90s bodyweight squats','90s glute bridges','3 min leg swings'] },
+        lifts:[
+          { name:'Barbell Squats', sets:4, reps:6 },
+          { name:'Romanian Deadlifts (RDLs)', sets:4, reps:8 },
+          { name:'Leg Press Machine', sets:3, reps:12 },
+          { name:'Standing Calf Raises', sets:4, reps:15 },
+          { name:'Tibialis Raises', sets:3, reps:20 },
+        ],
+        cooldown:{ label:'Static Flexibility (8 min)', items:['2 min seated forward fold','2 min couch stretch / side','2 min pigeon pose / side'] } },
+    };
+
+    const COURT = {
+      3: { title:'Active Recovery & Alignment', tags:['No jumping'],
+        blocks:[
+          { label:'Static Free Throws', detail:'Track makes vs misses', tracker:'freethrow' },
+          { label:'Triple-Threat Pivots & Footwork', detail:'20 min' },
+        ] },
+      4: { title:'Shooting Engine & Footwork Speed',
+        blocks:[
+          { label:'Dynamic warm-up', detail:'10 min — high knees, defensive slides' },
+          { label:'Close-range one-handed form shooting', detail:'20 min' },
+          { label:'Self-spin toss jumpshots', detail:'Track until 50 total makes', tracker:'jumpshot' },
+          { label:'Off-dribble pull-ups & floaters', detail:'20 min' },
+          { label:'Cool-down', detail:'3 min quad, 3 min calf, 4 min deep yogi squat' },
+        ] },
+      5: { title:'Explosive Plyometrics & Handle Mechanics',
+        blocks:[
+          { label:'Warm-up', detail:'10 min' },
+          { label:'Plyo: Pogo Jumps', detail:'4 sets x 10 (2-min voice rest)' },
+          { label:'Plyo: Max Approach Jumps', detail:'4 sets x 5 (2-min voice rest)' },
+          { label:'Stationary tight ball-handling', detail:'20 min' },
+          { label:'Zig-zag full-court attack combos', detail:'30 min' },
+          { label:'Cool-down', detail:'3 min quad, 3 min calf, 4 min deep yogi squat' },
+        ] },
+      6: { title:'Live Simulated Pressure',
+        blocks:[
+          { label:'Self warm-up', detail:'10 min' },
+          { label:'High-intensity live pickup games', detail:'Track total wins / losses', tracker:'pickup' },
+        ] },
+    };
+
+    const SKILL_PROMPT = "I am a complete beginner with zero coding knowledge. I want to build a simple personal website that shows my gym and basketball progress. Walk me through the absolute basics of HTML and CSS. Give me a small task to complete today using an online editor like CodePen.io.";
+
+    const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const TRAIN_DAYS = [3,4,5,6];
+
+    /* =========================================================
+       SMALL UI PIECES
+       ========================================================= */
+    function Check({ on, color }) {
+      return (
+        <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all"
+          style={{
+            background: on ? color : 'rgba(255,255,255,0.05)',
+            border: on ? `1px solid ${color}` : '1px solid rgba(255,255,255,0.12)'
+          }}>
+          {on && (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0a0a0f" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          )}
+        </div>
+      );
+    }
+
+    function Eyebrow({ children, color }) {
+      return <div className="text-[11px] font-bold tracking-[0.22em] uppercase mb-1" style={{ color }}>{children}</div>;
+    }
+
+    /* =========================================================
+       VOICE COACH  (the signature feature)
+       ========================================================= */
+    function VoiceCoach({ exercise, onClose }) {
+      const [set, setSet] = useState(1);
+      const [rep, setRep] = useState(0);
+      const [phase, setPhase] = useState('ready'); // ready | countdown | working | rest | done
+      const [restLeft, setRestLeft] = useState(90);
+      const [muted, setMuted] = useState(false);
+
+      const runningRef = useRef(false);
+      const mutedRef = useRef(false);
+      const setNumRef = useRef(1);
+      const timers = useRef([]);
+      const wakeRef = useRef(null);
+
+      mutedRef.current = muted;
+
+      const addT = (fn, ms) => { const id = setTimeout(fn, ms); timers.current.push(id); return id; };
+      const clearTimers = () => { timers.current.forEach(clearTimeout); timers.current = []; };
+
+      const speak = useCallback((text) => {
+        try {
+          if (mutedRef.current) return;
+          if (!('speechSynthesis' in window)) return;
+          const u = new SpeechSynthesisUtterance(text);
+          u.rate = 1; u.pitch = 1; u.volume = 1; u.lang = 'en-US';
+          window.speechSynthesis.speak(u);
+        } catch (e) {}
+      }, []);
+
+      const requestWake = async () => {
+        try { if ('wakeLock' in navigator) wakeRef.current = await navigator.wakeLock.request('screen'); } catch (e) {}
+      };
+      const releaseWake = () => { try { wakeRef.current && wakeRef.current.release(); wakeRef.current = null; } catch (e) {} };
+
+      const runRest = () => {
+        setPhase('rest');
+        let left = 90;
+        setRestLeft(left);
+        const tick = () => {
+          if (!runningRef.current) return;
+          left -= 1;
+          setRestLeft(left);
+          if (left === 10) speak('10 seconds remaining.');
+          if (left <= 0) {
+            const next = setNumRef.current + 1;
+            if (next > exercise.sets) {
+              speak(`All sets complete. Strong work on ${exercise.name}.`);
+              runningRef.current = false;
+              setPhase('done');
+              releaseWake();
+              return;
+            }
+            speak('Rest over. Get ready for next set.');
+            addT(() => startSet(next), 2500);
+            return;
+          }
+          addT(tick, 1000);
+        };
+        addT(tick, 1000);
+      };
+
+      const runReps = () => {
+        if (!runningRef.current) return;
+        setPhase('working');
+        let r = 1;
+        const doRep = () => {
+          if (!runningRef.current) return;
+          setRep(r);
+          speak(r === 1
+            ? 'Rep 1. Control down... pause... explode up.'
+            : `Rep ${r}. Down... pause... drive it up.`);
+          if (r >= exercise.reps) {
+            addT(() => { if (runningRef.current) { speak('Set complete. Racking weight. Starting 90 second rest period now.'); runRest(); } }, 4000);
+          } else {
+            r += 1;
+            addT(doRep, 4000);
+          }
+        };
+        doRep();
+      };
+
+      const startSet = (n) => {
+        setNumRef.current = n;
+        setSet(n);
+        setRep(0);
+        setPhase('countdown');
+        speak(`Get ready for ${exercise.name}. Set ${n}. Starting in 3... 2... 1... Lift.`);
+        addT(() => runReps(), 7000); // let the intro finish before reps begin
+      };
+
+      const start = () => {
+        runningRef.current = true;
+        speak(' '); // unlock audio inside the user gesture (iOS)
+        requestWake();
+        startSet(1);
+      };
+
+      const stop = useCallback(() => {
+        runningRef.current = false;
+        clearTimers();
+        try { window.speechSynthesis.cancel(); } catch (e) {}
+        releaseWake();
+      }, []);
+
+      useEffect(() => () => stop(), [stop]);
+
+      const close = () => { stop(); onClose(); };
+
+      const totalReps = exercise.reps;
+      const accent = C.gym.hex;
+
+      return (
+        <div className="fixed inset-0 z-50 flex flex-col safe-top"
+             style={{ background:'linear-gradient(170deg,#0a0b12 0%,#101019 100%)' }}>
+          <div className="flex items-center justify-between px-5 pt-4">
+            <button onClick={close} className="no-tap text-[13px] font-semibold text-white/60 px-3 py-2">Close</button>
+            <div className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/40">Voice Coach</div>
+            <button onClick={() => setMuted(m => !m)} className="no-tap text-[13px] font-semibold px-3 py-2"
+              style={{ color: muted ? '#F59E0B' : 'rgba(255,255,255,0.6)' }}>
+              {muted ? 'Muted' : 'Audio'}
+            </button>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-center px-7 text-center">
+            <Eyebrow color={accent}>{exercise.name}</Eyebrow>
+            <div className="text-white/50 text-sm mb-8">
+              Set {set} of {exercise.sets} &middot; {totalReps} reps{exercise.note ? ' '+exercise.note : ''}
+            </div>
+
+            {/* signature orb */}
+            <div className="relative w-60 h-60 flex items-center justify-center mb-8">
+              <div className={"absolute inset-0 rounded-full " + (phase==='working' ? 'rep-orb' : '')}
+                   style={{ background:`radial-gradient(circle, ${C.gym.soft} 0%, transparent 70%)`, border:`1px solid ${C.gym.ring}` }} />
+              <div className="relative">
+                {phase === 'rest' ? (
+                  <>
+                    <div className="text-6xl font-black tabular-nums" style={{ color: restLeft<=10 ? '#F59E0B' : '#fff' }}>{restLeft}</div>
+                    <div className="text-white/40 text-xs tracking-[0.2em] uppercase mt-1">Rest</div>
+                  </>
+                ) : phase === 'done' ? (
+                  <>
+                    <div className="text-3xl font-black" style={{ color:C.meal.hex }}>Done</div>
+                    <div className="text-white/40 text-xs tracking-[0.2em] uppercase mt-2">All sets complete</div>
+                  </>
+                ) : phase === 'working' ? (
+                  <>
+                    <div className="text-7xl font-black tabular-nums text-white">{rep}</div>
+                    <div className="text-white/40 text-xs tracking-[0.2em] uppercase mt-1">of {totalReps}</div>
+                  </>
+                ) : phase === 'countdown' ? (
+                  <div className="text-2xl font-bold text-white/80">Get ready…</div>
+                ) : (
+                  <div className="text-base font-semibold text-white/60 px-6">Put your AirPods in.<br/>Tap start when set up.</div>
+                )}
+              </div>
+            </div>
+
+            {phase === 'ready' && (
+              <button onClick={start} className="no-tap w-full max-w-xs py-5 rounded-2xl font-extrabold text-lg text-[#0a0a0f]"
+                style={{ background: accent, boxShadow:`0 12px 40px ${C.gym.ring}` }}>
+                START VOICE ASSISTANT
+              </button>
+            )}
+            {(phase === 'countdown' || phase === 'working' || phase === 'rest') && (
+              <button onClick={() => { stop(); setPhase('ready'); setSet(1); setRep(0); }}
+                className="no-tap w-full max-w-xs py-4 rounded-2xl font-bold text-base glass-strong text-white/80">
+                Stop
+              </button>
+            )}
+            {phase === 'done' && (
+              <button onClick={close} className="no-tap w-full max-w-xs py-5 rounded-2xl font-extrabold text-lg text-[#0a0a0f]"
+                style={{ background:C.meal.hex }}>
+                Finish exercise
+              </button>
+            )}
+
+            <div className="text-white/30 text-xs mt-6 max-w-xs">
+              Tempo coaching runs ~4s per rep. Keep the screen on; it stays awake automatically on supported phones.
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* =========================================================
+       VIDEO PLACEHOLDER
+       ========================================================= */
+    function VideoPlaceholder({ name, color }) {
+      const url = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(name + ' form technique');
+      return (
+        <a href={url} target="_blank" rel="noopener"
+           className="no-tap block w-full rounded-xl overflow-hidden mt-3 relative"
+           style={{ aspectRatio:'16/9', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)' }}>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: color }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#0a0a0f"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div className="text-white/45 text-xs">Tap to watch the form</div>
+          </div>
+        </a>
+      );
+    }
+
+    /* =========================================================
+       EXERCISE CARD
+       ========================================================= */
+    function ExerciseCard({ ex, done, toggle, onCoach }) {
+      const [open, setOpen] = useState(false);
+      return (
+        <div className="glass rounded-2xl p-4 mb-3">
+          <div className="flex items-center gap-3">
+            <button onClick={toggle} className="no-tap"><Check on={done} color={C.gym.hex} /></button>
+            <button onClick={() => setOpen(o => !o)} className="no-tap flex-1 text-left">
+              <div className="font-semibold text-[15px] leading-tight" style={{ color: done ? 'rgba(255,255,255,0.45)' : '#fff' }}>{ex.name}</div>
+              <div className="text-white/45 text-[13px] mt-0.5">
+                {ex.sets} sets &times; {ex.reps} reps{ex.note ? ' '+ex.note : ''}{ex.tempo ? ' · '+ex.tempo : ''}
+              </div>
+            </button>
+          </div>
+          {open && (
+            <div className="mt-3 pt-3 border-t border-white/5">
+              <button onClick={() => onCoach(ex)} className="no-tap w-full py-3.5 rounded-xl font-extrabold text-[15px] text-[#0a0a0f] flex items-center justify-center gap-2"
+                style={{ background:C.gym.hex }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#0a0a0f"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.92V21h2v-3.08A7 7 0 0019 11h-2z"/></svg>
+                START VOICE ASSISTANT
+              </button>
+              <VideoPlaceholder name={ex.name} color={C.gym.hex} />
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    /* =========================================================
+       PHASE BLOCK (warm-up / cool-down list)
+       ========================================================= */
+    function PhaseBlock({ block, color }) {
+      return (
+        <div className="glass rounded-2xl p-4 mb-3">
+          <div className="font-semibold text-[15px] mb-2" style={{ color }}>{block.label}</div>
+          <ul className="space-y-1.5">
+            {block.items.map((it,i) => (
+              <li key={i} className="flex items-center gap-2 text-white/65 text-[14px]">
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />{it}
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+
+    /* =========================================================
+       TAP COUNTER (basketball trackers)
+       ========================================================= */
+    function TapCounter({ label, value, onChange, color, mode }) {
+      // mode 'makemiss' => makes/misses ; 'single' => single counter ; 'winloss'
+      if (mode === 'makemiss' || mode === 'winloss') {
+        const a = mode==='winloss' ? 'Win' : 'Make';
+        const b = mode==='winloss' ? 'Loss' : 'Miss';
+        const total = value.a + value.b;
+        const pct = total ? Math.round((value.a/total)*100) : 0;
+        return (
+          <div className="glass-strong rounded-2xl p-4 mb-3">
+            <div className="flex items-baseline justify-between mb-3">
+              <div className="font-semibold text-[15px] text-white">{label}</div>
+              <div className="text-white/45 text-[13px]">{pct}% &middot; {value.a}/{total}</div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => onChange({ ...value, a:value.a+1 })} className="no-tap py-4 rounded-xl font-extrabold text-lg text-[#0a0a0f]" style={{ background: color }}>+ {a} ({value.a})</button>
+              <button onClick={() => onChange({ ...value, b:value.b+1 })} className="no-tap py-4 rounded-xl font-bold text-lg glass text-white/80">+ {b} ({value.b})</button>
+            </div>
+            <button onClick={() => onChange({ a:0, b:0 })} className="no-tap w-full mt-2 py-2 text-white/35 text-xs">Reset count</button>
+          </div>
+        );
+      }
+      // single
+      return (
+        <div className="glass-strong rounded-2xl p-4 mb-3">
+          <div className="flex items-baseline justify-between mb-3">
+            <div className="font-semibold text-[15px] text-white">{label}</div>
+            <div className="text-3xl font-black tabular-nums" style={{ color }}>{value}</div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => onChange(value+1)} className="no-tap py-4 rounded-xl font-extrabold text-lg text-[#0a0a0f]" style={{ background: color }}>+ Make</button>
+            <button onClick={() => onChange(Math.max(0,value-1))} className="no-tap py-4 rounded-xl font-bold text-lg glass text-white/70">Undo</button>
+          </div>
+        </div>
+      );
+    }
+
+    /* =========================================================
+       DAY SELECTOR
+       ========================================================= */
+    function DaySelector({ day, setDay, accent }) {
+      return (
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+          {TRAIN_DAYS.map(d => (
+            <button key={d} onClick={() => setDay(d)}
+              className="no-tap px-4 py-2 rounded-full text-[13px] font-bold whitespace-nowrap transition-all"
+              style={{
+                background: day===d ? accent : 'rgba(255,255,255,0.04)',
+                color: day===d ? '#0a0a0f' : 'rgba(255,255,255,0.55)',
+                border: day===d ? 'none' : '1px solid rgba(255,255,255,0.07)'
+              }}>
+              {DAY_NAMES[d].slice(0,3)}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    /* =========================================================
+       VIEWS
+       ========================================================= */
+    function Header({ eyebrow, title, color }) {
+      return (
+        <div className="mb-5">
+          <Eyebrow color={color}>{eyebrow}</Eyebrow>
+          <h1 className="text-[26px] font-black tracking-tight text-white leading-tight">{title}</h1>
+        </div>
+      );
+    }
+
+    function Dashboard({ progress, go }) {
+      const now = new Date();
+      const hr = now.getHours();
+      const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+      const todayNum = now.getDay();
+      const isTrain = TRAIN_DAYS.includes(todayNum);
+      const cards = [
+        { k:'gym', label:'Gym', color:C.gym.hex, sub: isTrain ? (GYM[todayNum]?.title||'') : 'Rest day', go:'gym' },
+        { k:'court', label:'Court', color:C.court.hex, sub: isTrain ? (COURT[todayNum]?.title||'') : 'Rest day', go:'court' },
+        { k:'meals', label:'Meals', color:C.meal.hex, sub:'7-meal fuel pipeline', go:'meals' },
+        { k:'skills', label:'Skills', color:C.skill.hex, sub:'Web dev · UI/UX · 2 hrs', go:'skills' },
+      ];
+      return (
+        <div>
+          <Header eyebrow={`${DAY_NAMES[todayNum]} · ${greet}`} title="Today's mission" color="#8B5CF6" />
+          <div className="glass-strong rounded-2xl p-5 mb-5">
+            <div className="text-white/50 text-[13px] mb-1">Meals logged today</div>
+            <div className="flex items-end gap-2">
+              <div className="text-4xl font-black text-white tabular-nums">{progress.meals}</div>
+              <div className="text-white/40 text-lg mb-1">/ {MEALS.length}</div>
+            </div>
+            <div className="mt-3 h-2 rounded-full bg-white/5 overflow-hidden">
+              <div className="h-full rounded-full transition-all" style={{ width:`${(progress.meals/MEALS.length)*100}%`, background:C.meal.hex }} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {cards.map(c => (
+              <button key={c.k} onClick={() => go(c.go)} className="no-tap glass rounded-2xl p-4 text-left h-32 flex flex-col justify-between"
+                style={{ borderColor:'rgba(255,255,255,0.06)' }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background:`${c.color}22`, border:`1px solid ${c.color}55` }}>
+                  <div className="w-3 h-3 rounded-md" style={{ background:c.color }} />
+                </div>
+                <div>
+                  <div className="font-bold text-[15px] text-white">{c.label}</div>
+                  <div className="text-white/45 text-[12px] leading-tight mt-0.5 line-clamp-2">{c.sub}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function GymView({ done, setDone, onCoach }) {
+      const today = new Date().getDay();
+      const [day, setDay] = useState(TRAIN_DAYS.includes(today) ? today : 3);
+      const plan = GYM[day];
+      const key = (n) => `gym-${day}-${n}`;
+      return (
+        <div>
+          <Header eyebrow="Gym Module" title={plan.title} color={C.gym.hex} />
+          <DaySelector day={day} setDay={setDay} accent={C.gym.hex} />
+          <PhaseBlock block={plan.warmup} color={C.gym.hex} />
+          {plan.lifts.map(ex => (
+            <ExerciseCard key={ex.name} ex={ex}
+              done={!!done[key(ex.name)]}
+              toggle={() => setDone(d => ({ ...d, [key(ex.name)]: !d[key(ex.name)] }))}
+              onCoach={onCoach} />
+          ))}
+          <PhaseBlock block={plan.cooldown} color={C.gym.hex} />
+        </div>
+      );
+    }
+
+    function CourtView({ trackers, setTrackers, done, setDone }) {
+      const today = new Date().getDay();
+      const [day, setDay] = useState(TRAIN_DAYS.includes(today) ? today : 3);
+      const plan = COURT[day];
+      return (
+        <div>
+          <Header eyebrow="Basketball Recon · 5:00 PM" title={plan.title} color={C.court.hex} />
+          <DaySelector day={day} setDay={setDay} accent={C.court.hex} />
+          {plan.tags && plan.tags.map((t,i) => (
+            <div key={i} className="inline-block px-3 py-1 rounded-full text-[12px] font-bold mb-3" style={{ background:C.court.soft, color:C.court.hex }}>{t}</div>
+          ))}
+          {plan.blocks.map((b,i) => {
+            if (b.tracker === 'freethrow') {
+              const v = trackers.freethrow || { a:0, b:0 };
+              return <TapCounter key={i} label="Static Free Throws (100)" value={v} mode="makemiss" color={C.court.hex} onChange={(nv)=>setTrackers(t=>({...t, freethrow:nv}))} />;
+            }
+            if (b.tracker === 'jumpshot') {
+              const v = trackers.jumpshot || 0;
+              return (
+                <div key={i}>
+                  <TapCounter label="Self-Spin Jumpshot Makes (goal 50)" value={v} mode="single" color={C.court.hex} onChange={(nv)=>setTrackers(t=>({...t, jumpshot:nv}))} />
+                  {v >= 50 && <div className="text-center text-[13px] font-bold mb-3" style={{color:C.meal.hex}}>Goal reached — 50 makes ✓</div>}
+                </div>
+              );
+            }
+            if (b.tracker === 'pickup') {
+              const v = trackers.pickup || { a:0, b:0 };
+              return <TapCounter key={i} label="Live Pickup Games" value={v} mode="winloss" color={C.court.hex} onChange={(nv)=>setTrackers(t=>({...t, pickup:nv}))} />;
+            }
+            const k = `court-${day}-${i}`;
+            return (
+              <button key={i} onClick={()=>setDone(d=>({...d,[k]:!d[k]}))} className="no-tap w-full glass rounded-2xl p-4 mb-3 flex items-center gap-3 text-left">
+                <Check on={!!done[k]} color={C.court.hex} />
+                <div>
+                  <div className="font-semibold text-[15px]" style={{color: done[k]?'rgba(255,255,255,0.45)':'#fff'}}>{b.label}</div>
+                  <div className="text-white/45 text-[13px] mt-0.5">{b.detail}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    function MealsView({ done, setDone }) {
+      const eaten = MEALS.filter(m => done[`meal-${m.id}`]).length;
+      return (
+        <div>
+          <Header eyebrow="Nutritional Pipeline" title="Daily fuel" color={C.meal.hex} />
+          <div className="text-white/45 text-[13px] mb-4">{eaten} of {MEALS.length} logged · raw weights</div>
+          {MEALS.map(m => {
+            const k = `meal-${m.id}`;
+            const on = !!done[k];
+            return (
+              <div key={m.id} className="glass rounded-2xl p-4 mb-3" style={ m.warn ? { border:`1px solid ${C.court.ring}` } : {}}>
+                <div className="flex items-start gap-3">
+                  <button onClick={()=>setDone(d=>({...d,[k]:!d[k]}))} className="no-tap mt-0.5"><Check on={on} color={C.meal.hex} /></button>
+                  <div className="flex-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <div className="font-bold text-[15px]" style={{color: on?'rgba(255,255,255,0.5)':'#fff'}}>{m.title}</div>
+                      <div className="text-[12px] font-bold tabular-nums" style={{color:C.meal.hex}}>{m.time}</div>
+                    </div>
+                    <ul className="mt-2 space-y-1">
+                      {m.items.map((it,i)=>(
+                        <li key={i} className="flex items-center gap-2 text-white/65 text-[14px]">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{background:C.meal.hex}} />{it}
+                        </li>
+                      ))}
+                    </ul>
+                    {m.warn && (
+                      <div className="mt-3 rounded-xl p-3 flex gap-2 items-start" style={{ background:C.court.soft, border:`1px solid ${C.court.ring}` }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.court.hex} strokeWidth="2.4" className="mt-0.5 shrink-0"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+                        <div className="text-[13px] font-bold leading-snug" style={{color:'#FCD9A0'}}>{m.warn}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    function SkillsView({ done, setDone }) {
+      const [copied, setCopied] = useState(false);
+      const copy = async () => {
+        try { await navigator.clipboard.writeText(SKILL_PROMPT); }
+        catch(e){
+          const ta=document.createElement('textarea'); ta.value=SKILL_PROMPT; document.body.appendChild(ta); ta.select();
+          try{document.execCommand('copy');}catch(_){} document.body.removeChild(ta);
+        }
+        setCopied(true); setTimeout(()=>setCopied(false),1800);
+      };
+      const items = [
+        { id:'webdev', label:'1 hour — Web Development', sub:'Next.js / JavaScript' },
+        { id:'design', label:'1 hour — UI/UX Design', sub:'Figma' },
+      ];
+      return (
+        <div>
+          <Header eyebrow="Skill Acquisition" title="Build the future" color={C.skill.hex} />
+          {items.map(it => {
+            const k = `skill-${it.id}`; const on = !!done[k];
+            return (
+              <button key={it.id} onClick={()=>setDone(d=>({...d,[k]:!d[k]}))} className="no-tap w-full glass rounded-2xl p-4 mb-3 flex items-center gap-3 text-left">
+                <Check on={on} color={C.skill.hex} />
+                <div>
+                  <div className="font-semibold text-[15px]" style={{color:on?'rgba(255,255,255,0.5)':'#fff'}}>{it.label}</div>
+                  <div className="text-white/45 text-[13px] mt-0.5">{it.sub}</div>
+                </div>
+              </button>
+            );
+          })}
+          <div className="glass-strong rounded-2xl p-4 mt-2">
+            <Eyebrow color={C.skill.hex}>Starter prompt</Eyebrow>
+            <p className="text-white/70 text-[13.5px] leading-relaxed mb-3">{SKILL_PROMPT}</p>
+            <button onClick={copy} className="no-tap w-full py-3.5 rounded-xl font-extrabold text-[15px] text-[#0a0a0f]" style={{ background: copied ? C.meal.hex : C.skill.hex }}>
+              {copied ? 'Copied to clipboard ✓' : 'Copy prompt'}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    /* =========================================================
+       BOTTOM NAV
+       ========================================================= */
+    function BottomNav({ tab, setTab }) {
+      const items = [
+        { k:'dashboard', label:'Home', color:'#8B5CF6' },
+        { k:'gym', label:'Gym', color:C.gym.hex },
+        { k:'court', label:'Court', color:C.court.hex },
+        { k:'meals', label:'Meals', color:C.meal.hex },
+        { k:'skills', label:'Skills', color:C.skill.hex },
+      ];
+      return (
+        <div className="fixed bottom-0 left-0 right-0 z-30">
+          <div className="glass-strong border-t border-white/8 px-2 pt-2" style={{ paddingBottom:'calc(env(safe-area-inset-bottom) + 8px)' }}>
+            <div className="flex justify-around max-w-md mx-auto">
+              {items.map(it => {
+                const active = tab===it.k;
+                return (
+                  <button key={it.k} onClick={()=>setTab(it.k)} className="no-tap flex flex-col items-center gap-1 py-1.5 px-2 flex-1">
+                    <div className="w-6 h-1 rounded-full transition-all" style={{ background: active ? it.color : 'transparent' }} />
+                    <span className="text-[11px] font-semibold" style={{ color: active ? '#fff' : 'rgba(255,255,255,0.4)' }}>{it.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* =========================================================
+       ROOT APP
+       ========================================================= */
+    function App() {
+      const stamp = todayStamp();
+      const [tab, setTab] = usePersistentState('aos-tab', 'dashboard');
+      const [doneState, setDoneState] = usePersistentState('aos-done', { date: stamp, data:{} });
+      const [trackers, setTrackers] = usePersistentState('aos-trackers', { date: stamp, data:{} });
+      const [coachEx, setCoachEx] = useState(null);
+
+      // Daily auto-reset for checkmarks + trackers
+      useEffect(() => {
+        if (doneState.date !== stamp) setDoneState({ date: stamp, data:{} });
+        if (trackers.date !== stamp) setTrackers({ date: stamp, data:{} });
+      }, []); // eslint-disable-line
+
+      const done = doneState.data;
+      const setDone = (updater) => setDoneState(s => ({ date: stamp, data: typeof updater==='function' ? updater(s.data) : updater }));
+      const tr = trackers.data;
+      const setTr = (updater) => setTrackers(s => ({ date: stamp, data: typeof updater==='function' ? updater(s.data) : updater }));
+
+      const mealsDone = MEALS.filter(m => done[`meal-${m.id}`]).length;
+
+      return (
+        <div className="min-h-full">
+          <div className="max-w-md mx-auto px-5 safe-top safe-bottom pt-4">
+            {tab==='dashboard' && <Dashboard progress={{ meals: mealsDone }} go={setTab} />}
+            {tab==='gym' && <GymView done={done} setDone={setDone} onCoach={setCoachEx} />}
+            {tab==='court' && <CourtView trackers={tr} setTrackers={setTr} done={done} setDone={setDone} />}
+            {tab==='meals' && <MealsView done={done} setDone={setDone} />}
+            {tab==='skills' && <SkillsView done={done} setDone={setDone} />}
+
+            <div className="text-center text-white/20 text-[11px] mt-8">
+              Checkmarks reset each new day · everything saves on this device
+            </div>
+          </div>
+
+          <BottomNav tab={tab} setTab={setTab} />
+          {coachEx && <VoiceCoach exercise={coachEx} onClose={()=>setCoachEx(null)} />}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
